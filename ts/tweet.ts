@@ -28,16 +28,48 @@ class Tweet {
 
     //returns a boolean, whether the text includes any content written by the person tweeting.
     get written():boolean {
-        //TODO: identify whether the tweet is written
-        return false;
+        // Clean up the tweet first
+        let stripped = this.text
+            .replace(/#RunKeeper/gi, '')
+            .replace(/https?:\/\/\S+/gi, '')
+            .trim();
+
+        // Consider text after the last separator as user-written
+        const separators = [" - ", " – ", " — ", ": "];
+        let lastIdx = -1;
+        for (const sep of separators) {
+            const idx = stripped.lastIndexOf(sep);
+            if (idx > lastIdx) lastIdx = idx;
+        }
+        if (lastIdx === -1) return false;
+        const tail = stripped.substring(lastIdx + 3).trim();
+        return tail.length > 0;
     }
 
     get writtenText():string {
         if(!this.written) {
             return "";
         }
-        //TODO: parse the written text from the tweet
-        return "";
+        // Remove hashtag + links first
+        let stripped = this.text
+            .replace(/#RunKeeper/gi, '')
+            .replace(/https?:\/\/\S+/gi, '')
+            .trim();
+
+        // Extract the text after the last separator
+        const candidates = [" - ", " – ", " — ", ": "];
+        let lastIdx = -1, sepLen = 0;
+        for (const sep of candidates) {
+            const idx = stripped.lastIndexOf(sep);
+            if (idx > lastIdx) { lastIdx = idx; sepLen = sep.length; }
+        }
+        if (lastIdx === -1) return "";
+        let userPart = stripped.substring(lastIdx + sepLen).trim();
+        // Trim surrounding quotes
+        if ((userPart.startsWith('"') && userPart.endsWith('"')) || (userPart.startsWith("'") && userPart.endsWith("'"))) {
+            userPart = userPart.substring(1, userPart.length - 1).trim();
+        }
+        return userPart;
     }
 
     get activityType():string {

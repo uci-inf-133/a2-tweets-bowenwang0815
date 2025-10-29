@@ -50,6 +50,13 @@ function parseTweets(runkeeper_tweets) {
 	setTextByClass('miscellaneous', counts.miscellaneous.toString());
 	setTextByClass('miscellaneousPct', rounding2decmial(counts.miscellaneous));
 
+	// Written text stats for completed events
+	const completedTotal = counts.completed_event;
+	const completedWritten = tweet_array.filter(function(t){ return t.source === 'completed_event' && t.written; }).length;
+	const writtenPctText = completedTotal === 0 ? '0.00%' : math.format((completedWritten / completedTotal) * 100, {notation:'fixed', precision:2}) + '%';
+	setTextByClass('written', completedWritten.toString());
+	setTextByClass('writtenPct', writtenPctText);
+
 	// get all the tweet times
 	const tweetTimes = tweet_array.map(function(t) 
 	{ 
