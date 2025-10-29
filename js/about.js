@@ -13,6 +13,43 @@ function parseTweets(runkeeper_tweets) {
 	//It works correctly, your task is to update the text of the other tags in the HTML file!
 	document.getElementById('numberTweets').innerText = tweet_array.length;	
 
+	// Compute category counts
+	const total = tweet_array.length;
+	const counts = 
+	{
+		completed_event: 0,
+		live_event: 0,
+		achievement: 0,
+		miscellaneous: 0
+	};
+	for (const t of tweet_array) {
+		const src = t.source;
+		counts[src] += 1;
+	}
+
+	
+	// Update category spans
+	const setTextByClass = (cls, text) => {
+		const nodes = document.getElementsByClassName(cls);
+		for (let i = 0; i < nodes.length; i++) {
+			nodes[i].innerText = text;
+		}
+	};
+	function rounding2decmial (n)
+	{
+		const num = total === 0 ? 0 : (n/total) * 100;
+		return math.format(num, {notation: 'fixed', precision: 2}) + '%';
+	}
+
+	setTextByClass('completedEvents', counts.completed_event.toString());
+	setTextByClass('completedEventsPct', rounding2decmial(counts.completed_event));
+	setTextByClass('liveEvents', counts.live_event.toString());
+	setTextByClass('liveEventsPct', rounding2decmial(counts.live_event));
+	setTextByClass('achievements', counts.achievement.toString());
+	setTextByClass('achievementsPct', rounding2decmial(counts.achievement));
+	setTextByClass('miscellaneous', counts.miscellaneous.toString());
+	setTextByClass('miscellaneousPct', rounding2decmial(counts.miscellaneous));
+
 	// get all the tweet times
 	const tweetTimes = tweet_array.map(function(t) 
 	{ 
