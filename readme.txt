@@ -8,7 +8,7 @@
 - 3/3 Adding a text search interface
 
 2. How long, in hours, did it take you to complete this assignment?
-6.5, most 
+6.5, most of the time is working on fixing the graph/plot, and searching the query base on the activities.
 3. What online resources did you consult when completing this assignment? (list sites like StackOverflow or specific URLs for tutorials; describe queries to Generative AI or use of AI-based code completion)
 - Vega-Lite examples and docs (encoding, aggregate, timeUnit): https://vega.github.io/vega-lite/examples/
 - math.js format docs
