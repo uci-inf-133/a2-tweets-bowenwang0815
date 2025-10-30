@@ -9,19 +9,16 @@ function parseTweets(runkeeper_tweets) {
 		return new Tweet(tweet.text, tweet.created_at);
 	});
 
-	// Build completed tweets with parsed activity and distance
 	const completed = tweet_array.filter(function(t){
 		return t.source === 'completed_event' && t.activityType !== 'unknown';
 	});
 
-	// Count activity frequencies
 	const countsByActivity = {};
 	for (const t of completed) {
 		const a = t.activityType;
 		countsByActivity[a] = (countsByActivity[a] || 0) + 1;
 	}
 	const activities = Object.keys(countsByActivity);
-	// Update spans for numberActivities and top three
 	document.getElementById('numberActivities').innerText = activities.length.toString();
 	const top3 = activities.sort(function(a,b){return countsByActivity[b]-countsByActivity[a];}).slice(0,3);
 	document.getElementById('firstMost').innerText = top3[0] || '';
@@ -51,6 +48,21 @@ function parseTweets(runkeeper_tweets) {
 	const weekdayMean = mean(longestTweets.filter(function(t){ return !isWeekend(t.time); }).map(function(t){ return t.distance; }));
 	const weekendMean = mean(longestTweets.filter(function(t){ return isWeekend(t.time); }).map(function(t){ return t.distance; }));
 	document.getElementById('weekdayOrWeekendLonger').innerText = (weekendMean > weekdayMean) ? 'weekends' : 'weekdays';
+
+	// Activity counts bar chart (completed only)
+	activity_vis_spec = {
+	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+	  "description": "Number of Tweets containing each type of activity.",
+	  "height": 200,
+	  "data": { "values": completed },
+	  "transform": [ { "aggregate": [{"op":"count","as":"count"}], "groupby": ["activityType"] } ],
+	  "mark": {"type":"bar"},
+	  "encoding": {
+		"x": {"field":"activityType","type":"nominal", "sort":"-y", "title":"Activity"},
+		"y": {"field":"count","type":"quantitative", "title":"Number of Tweets"}
+	  }
+	};
+	vegaEmbed('#activityVis', activity_vis_spec, {actions:false});
 
 
 	// Distances by day of week for the three most tweeted-about activities (points)
