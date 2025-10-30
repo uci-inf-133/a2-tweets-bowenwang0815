@@ -29,7 +29,10 @@ function parseTweets(runkeeper_tweets) {
 	document.getElementById('thirdMost').innerText = top3[2] || '';
 
 	// Compute longest/shortest among top 3 by average distance and weekday vs weekend
-	function mean(arr){ if(arr.length===0) return 0; return arr.reduce(function(a,b){return a+b;},0)/arr.length; }
+	function mean(arr)
+	{ 
+		if(arr.length===0) return 0; 
+		return arr.reduce(function(a,b){return a+b;},0)/arr.length; }
 	const top3Set = new Set(top3);
 	const top3Completed = completed.filter(function(t){ return top3Set.has(t.activityType) && t.distance > 0; });
 	const means = {};
@@ -49,23 +52,74 @@ function parseTweets(runkeeper_tweets) {
 	const weekendMean = mean(longestTweets.filter(function(t){ return isWeekend(t.time); }).map(function(t){ return t.distance; }));
 	document.getElementById('weekdayOrWeekendLonger').innerText = (weekendMean > weekdayMean) ? 'weekends' : 'weekdays';
 
-	// Create a graph of the number of tweets containing each type of activity
-	activity_vis_spec = {
+
+	// Distances by day of week for the three most tweeted-about activities (points)
+	const top3Data = top3Completed.map(function(t){ 
+		const d = t.time;
+		const dow = d.getDay();
+		return { 
+			activityType: t.activityType, 
+			distance: t.distance, 
+			time: d.toISOString(),
+			dow: dow
+		}; 
+	});
+	console.log('top3 activities:', top3);
+	console.log('top3Completed count:', top3Completed.length);
+	if (top3Data.length > 0) { console.log('sample top3Data[0]:', top3Data[0]); }
+
+	const distanceVis = {
 	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-	  "description": "A graph of the number of Tweets containing each type of activity.",
-	  "data": { "values": completed },
-	  "transform": [ { "aggregate": [{"op":"count","as":"count"}], "groupby": ["activityType"] } ],
-	  "mark": {"type":"bar"},
+	  "description": "Distances for top 3 activities by day of week.",
+	  "height": 200,
+	  "data": {"values": top3Data},
+	  "mark": {"type":"point", "opacity":0.45},
 	  "encoding": {
-		"x": {"field":"count","type":"quantitative", "title":"Number of Tweets"},
-		"y": {"field":"activityType","type":"nominal", "sort":"-x", "title":"Activity"}
+		"x": {"field":"dow", "type":"ordinal", "title":"Day of Week", "sort":[0,1,2,3,4,5,6],
+			"scale": {"domain": [0,1,2,3,4,5,6]},
+			"axis": {"grid": true,"labelExpr": "toNumber(datum.value)==0?'Sun':toNumber(datum.value)==1?'Mon':toNumber(datum.value)==2?'Tue':toNumber(datum.value)==3?'Wed':toNumber(datum.value)==4?'Thu':toNumber(datum.value)==5?'Fri':'Sat'"}},
+		"y": {"field":"distance", "type":"quantitative", "title":"Distance (mi)"},
+		"color": {"field":"activityType", "type":"nominal", "title":"Activity"}
 	  }
 	};
-	vegaEmbed('#activityVis', activity_vis_spec, {actions:false});
-	console.log('Activity counts (raw):', countsByActivity);
+	vegaEmbed('#distanceVis', distanceVis, {actions:false});
 
-	//TODO: create the visualizations which group the three most-tweeted activities by the day of the week.
-	//Use those visualizations to answer the questions about which activities tended to be longest and when.
+	// Aggregated means by day and activity (bars)
+	const distanceVisAggregated = {
+	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+	  "description": "Mean distance for top 3 activities by day of week.",
+	  "height": 200,
+	  "data": {"values": top3Data},
+	  "transform": [
+		{"aggregate": [{"op":"mean","field":"distance","as":"meanDistance"}], "groupby": ["activityType", "dow"]}
+	  ],
+	  "mark": {"type":"point", "size": 40},
+	  "encoding": {
+		"x": {"field":"dow", "type":"ordinal", "title":"time (day)", "sort":[0,1,2,3,4,5,6],
+			"scale": {"domain": [0,1,2,3,4,5,6]},
+			"axis": {"labelExpr": "toNumber(datum.value)==0?'Sun':toNumber(datum.value)==1?'Mon':toNumber(datum.value)==2?'Tue':toNumber(datum.value)==3?'Wed':toNumber(datum.value)==4?'Thu':toNumber(datum.value)==5?'Fri':'Sat'",
+				"grid": true}},
+		"y": {"field":"meanDistance", "type":"quantitative", "title":"Mean of distance", "scale": {"nice": true},
+			"axis": {"grid": true}},
+		"color": {"field":"activityType", "type":"nominal", "title":"Activity"}
+	  }
+	};
+	vegaEmbed('#distanceVisAggregated', distanceVisAggregated, {actions:false});
+
+	// Toggle button behavior
+	const btn = document.getElementById('aggregate');
+	const visRaw = document.getElementById('distanceVis');
+	const visAgg = document.getElementById('distanceVisAggregated');
+	// Show means by default; keep container height stable
+	visRaw.style.display = 'none';
+	visAgg.style.display = 'block';
+	btn.innerText = 'Show All Activities';
+	btn.addEventListener('click', function(){
+		const showingAgg = visAgg.style.display !== 'none';
+		visAgg.style.display = showingAgg ? 'none' : 'block';
+		visRaw.style.display = showingAgg ? 'block' : 'none';
+		btn.innerText = showingAgg ? 'Show means' : 'Show All Activities';
+	});
 }
 
 //Wait for the DOM to load

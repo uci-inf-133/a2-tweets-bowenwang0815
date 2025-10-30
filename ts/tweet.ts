@@ -147,7 +147,22 @@ class Tweet {
     }
 
     getHTMLTableRow(rowNumber:number):string {
-        //TODO: return a table row which summarizes the tweet with a clickable link to the RunKeeper activity
-        return "<tr></tr>";
+        // return a table row which summarizes the tweet with a clickable link to the RunKeeper activity
+        const activity = this.activityType;
+        const urlMatch = this.text.match(/https?:\/\/\S+/);
+        let linkedText = this.text;
+        if (urlMatch) {
+            const url = urlMatch[0];
+            const anchor = `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            linkedText = this.text.replace(url, anchor);
+        }
+        const html = `
+            <tr>
+                <th scope="row">${rowNumber}</th>
+                <td>${activity}</td>
+                <td>${linkedText}</td>
+            </tr>
+        `;
+        return html;
     }
 }

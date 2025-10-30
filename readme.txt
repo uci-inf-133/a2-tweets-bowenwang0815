@@ -1,11 +1,11 @@
---Readme document for *YOUR NAME*, *YOUR_EMAIL@uci.edu*--
+--Readme document for *Bowen Wang*, *bowensw@uci.edu*--
 
 1. How many assignment points do you believe you completed (replace the *'s with your numbers)?
 
 */10
-- */3 Summarizing tweets
-- */4 Identifying the most popular activities
-- */3 Adding a text earch interface
+- 3/3 Summarizing tweets
+- 4/4 Identifying the most popular activities
+- 3/3 Adding a text earch interface
 
 2. How long, in hours, did it take you to complete this assignment?
 
