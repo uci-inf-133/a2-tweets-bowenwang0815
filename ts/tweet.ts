@@ -76,15 +76,73 @@ class Tweet {
         if (this.source != 'completed_event') {
             return "unknown";
         }
-        //TODO: parse the activity type from the text of the tweet
-        return "";
+        const lower = this.text.toLowerCase();
+        // running variants
+        if (lower.includes(' run') || lower.startsWith('run') || lower.includes('running') || lower.includes('ran') || lower.includes('jog') || lower.includes('treadmill')) return 'running';
+        // walking variants
+        if (lower.includes(' walk') || lower.startsWith('walk') || lower.includes('walking') || lower.includes('walked') || lower.includes('power walk')) return 'walking';
+        // cycling variants
+        if (lower.includes('ride') || lower.includes('rode') || lower.includes('bike') || lower.includes('biked') || lower.includes('biking') || lower.includes('cycling') || lower.includes('cycle')) return 'cycling';
+        if (lower.includes('hike')) return 'hiking';
+        if (lower.includes('swim')) return 'swimming';
+        if (lower.includes('row')) return 'rowing';
+        if (lower.includes('ski')) return 'skiing';
+        if (lower.includes('snowboard')) return 'snowboarding';
+        if (lower.includes('skate')) return 'skating';
+        if (lower.includes('elliptical')) return 'elliptical';
+        if (lower.includes('yoga')) return 'yoga';
+        return 'other';
     }
 
     get distance():number {
         if(this.source != 'completed_event') {
             return 0;
         }
-        //TODO: prase the distance from the text of the tweet
+        const lower = this.text.toLowerCase();
+        const words = lower.split(/\s+/);
+
+        function stripEdgePunct(s:string):string {
+            let start = 0, end = s.length;
+            while (start < end && "(\"'".indexOf(s[start]) !== -1) start++;
+            while (end > start && ",.!?:;)\"'".indexOf(s[end-1]) !== -1) end--;
+            return s.substring(start, end);
+        }
+
+        function toMiles(value:number, unit:string):number {
+            if (unit.indexOf('km') === 0 || unit.indexOf('kilometer') === 0) {
+                return value / 1.609;
+            }
+            return value;
+        }
+
+        for (let i = 0; i < words.length; i++) {
+            let token = stripEdgePunct(words[i]);
+            if (!token) continue;
+
+            // Case 1: number followed by unit in next token
+            const value = parseFloat(token);
+            if (!Number.isNaN(value) && (token[0] >= '0' && token[0] <= '9')) {
+                if (i + 1 < words.length) {
+                    let unit = stripEdgePunct(words[i + 1]);
+                    if (!unit) continue;
+                    if (unit === 'mi' || unit === 'mile' || unit === 'miles' || unit === 'km' || unit === 'kilometer' || unit === 'kilometers') {
+                        const miles = toMiles(value, unit);
+                        return Math.round(miles * 100) / 100;
+                    }
+                }
+            }
+
+            // Case 2: number+unit combined (e.g., 5mi or 10km)
+            if (token.endsWith('mi') || token.endsWith('km')) {
+                let unit = token.endsWith('mi') ? 'mi' : 'km';
+                let numPart = token.substring(0, token.length - unit.length);
+                const v = parseFloat(numPart);
+                if (!Number.isNaN(v)) {
+                    const miles = toMiles(v, unit);
+                    return Math.round(miles * 100) / 100;
+                }
+            }
+        }
         return 0;
     }
 
